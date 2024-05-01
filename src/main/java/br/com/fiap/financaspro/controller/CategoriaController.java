@@ -7,6 +7,9 @@ import java.util.List;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("categoria")
+@CacheConfig(cacheNames = "categorias")
 @Slf4j
 public class CategoriaController {
 
@@ -35,6 +39,7 @@ public class CategoriaController {
 
     
     @GetMapping
+    @Cacheable
     public List<Categoria> index() {
         return repository.findAll();
 
@@ -42,32 +47,35 @@ public class CategoriaController {
 
     @PostMapping
     @ResponseStatus(CREATED)
+    @CacheEvict(allEntries = true)
     public Categoria create(@RequestBody @Valid Categoria categoria) { // binding
         log.info("cadastrando categoria {} ", categoria);
         return repository.save(categoria);
     }
-
+    
     @GetMapping("{id}")
     public ResponseEntity<Categoria> show(@PathVariable Long id) {
         log.info("buscando categoria por id {}", id);
-
+        
         return repository
-                .findById(id)
-                .map(ResponseEntity::ok) // reference method
-                .orElse(ResponseEntity.notFound().build());
-
+        .findById(id)
+        .map(ResponseEntity::ok) // reference method
+        .orElse(ResponseEntity.notFound().build());
+        
     }
-
+    
     @DeleteMapping("{id}")
     @ResponseStatus(NO_CONTENT)
+    @CacheEvict(allEntries = true)
     public void destroy(@PathVariable Long id) {
         log.info("apagando categoria");
-
+        
         verificarSeExisteCategoria(id);
         repository.deleteById(id);
     }
-
+    
     @PutMapping("{id}")
+    @CacheEvict(allEntries = true)
     public Categoria update(@PathVariable Long id, @RequestBody Categoria categoria) {
         log.info("atualizando categoria com id {} para {}", id, categoria);
 
