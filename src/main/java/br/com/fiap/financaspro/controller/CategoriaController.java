@@ -5,7 +5,6 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 import java.util.List;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,6 +24,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.com.fiap.financaspro.model.Categoria;
 import br.com.fiap.financaspro.repository.CategoriaRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("categoria")
 @CacheConfig(cacheNames = "categorias")
 @Slf4j
+@Tag(name = "categorias", description = "Categorias de Movimentações")
 public class CategoriaController {
 
     @Autowired
@@ -40,6 +44,10 @@ public class CategoriaController {
     
     @GetMapping
     @Cacheable
+    @Operation(
+        summary = "Listar Categorias",
+        description = "Retorna um array com todas as categorias cadastradas."
+    )
     public List<Categoria> index() {
         return repository.findAll();
 
@@ -48,6 +56,14 @@ public class CategoriaController {
     @PostMapping
     @ResponseStatus(CREATED)
     @CacheEvict(allEntries = true)
+    @Operation(
+        summary = "Cadastrar Categoria",
+        description = "Cadastra uma nova categoria para o usuário logado com os dados enviados no corpo da requisição."
+    )
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "201", description = "Categoria cadastrada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Validação falhou. Verifique as regras para o corpo da requisição", useReturnTypeSchema = false)
+    })
     public Categoria create(@RequestBody @Valid Categoria categoria) { // binding
         log.info("cadastrando categoria {} ", categoria);
         return repository.save(categoria);
